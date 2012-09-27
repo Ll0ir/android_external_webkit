@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -57,12 +57,9 @@ class Shader
     int getInfoLogLength() const;
     void getInfoLog(GLsizei bufSize, GLsizei *length, char *infoLog);
     int getSourceLength() const;
-    void getSource(GLsizei bufSize, GLsizei *length, char *buffer);
-    int getTranslatedSourceLength() const;
-    void getTranslatedSource(GLsizei bufSize, GLsizei *length, char *buffer);
+    void getSource(GLsizei bufSize, GLsizei *length, char *source);
 
     virtual void compile() = 0;
-    virtual void uncompile();
     bool isCompiled();
     const char *getHLSL();
 
@@ -75,29 +72,14 @@ class Shader
     static void releaseCompiler();
 
   protected:
+    DISALLOW_COPY_AND_ASSIGN(Shader);
+
     void parseVaryings();
 
     void compileToHLSL(void *compiler);
 
-    void getSourceImpl(char *source, GLsizei bufSize, GLsizei *length, char *buffer);
-
     static GLenum parseType(const std::string &type);
     static bool compareVarying(const Varying &x, const Varying &y);
-
-    VaryingList mVaryings;
-
-    bool mUsesFragCoord;
-    bool mUsesFrontFacing;
-    bool mUsesPointSize;
-    bool mUsesPointCoord;
-
-    static void *mFragmentCompiler;
-    static void *mVertexCompiler;
-
-  private:
-    DISALLOW_COPY_AND_ASSIGN(Shader);
-
-    void initializeCompiler();
 
     const GLuint mHandle;
     unsigned int mRefCount;     // Number of program objects this shader is attached to
@@ -107,7 +89,17 @@ class Shader
     char *mHlsl;
     char *mInfoLog;
 
+    VaryingList varyings;
+
+    bool mUsesFragCoord;
+    bool mUsesFrontFacing;
+    bool mUsesPointSize;
+    bool mUsesPointCoord;
+
     ResourceManager *mResourceManager;
+
+    static void *mFragmentCompiler;
+    static void *mVertexCompiler;
 };
 
 struct Attribute
@@ -135,9 +127,8 @@ class VertexShader : public Shader
 
     ~VertexShader();
 
-    virtual GLenum getType();
-    virtual void compile();
-    virtual void uncompile();
+    GLenum getType();
+    void compile();
     int getSemanticIndex(const std::string &attributeName);
 
   private:
@@ -155,8 +146,8 @@ class FragmentShader : public Shader
 
     ~FragmentShader();
 
-    virtual GLenum getType();
-    virtual void compile();
+    GLenum getType();
+    void compile();
 
   private:
     DISALLOW_COPY_AND_ASSIGN(FragmentShader);

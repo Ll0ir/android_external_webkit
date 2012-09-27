@@ -12,9 +12,6 @@
 		<Platform
 			Name="Win32"
 		/>
-		<Platform
-			Name="x64"
-		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -50,11 +47,9 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702"
+				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
-				WarnAsError="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -67,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3d9.lib D3dx9.lib d3dcompiler.lib"
+				AdditionalDependencies="D3dx9.lib"
 				LinkIncremental="2"
 				ModuleDefinitionFile="libGLESv2.def"
 				GenerateDebugInformation="true"
@@ -130,11 +125,9 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGLESV2_EXPORTS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_SECURE_SCL=0"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702;4718"
+				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
-				WarnAsError="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -147,7 +140,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3d9.lib D3dx9.lib d3dcompiler.lib"
+				AdditionalDependencies="D3dx9.lib"
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="false"
 				ModuleDefinitionFile="libGLESv2.def"
@@ -158,171 +151,6 @@
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine="@echo on&#x0D;&#x0A;mkdir &quot;$(ProjectDir)..\..\lib\$(ConfigurationName)\&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\libGLESv2.dll&quot; &quot;$(ProjectDir)..\..\lib\$(ConfigurationName)\&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\libGLESv2.lib&quot; &quot;$(ProjectDir)..\..\lib\$(ConfigurationName)\&quot;&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="$(ProjectDir)/..; $(ProjectDir)/../../include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGLESV2_EXPORTS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702;4718"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="3"
-				WarnAsError="true"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="d3d9.lib D3dx9.lib d3dcompiler.lib"
-				LinkIncremental="2"
-				ModuleDefinitionFile="libGLESv2.def"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine="@echo on&#x0D;&#x0A;mkdir &quot;$(ProjectDir)..\..\lib\$(ConfigurationName)\&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\libGLESv2.dll&quot; &quot;$(ProjectDir)..\..\lib\$(ConfigurationName)\&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\libGLESv2.lib&quot; &quot;$(ProjectDir)..\..\lib\$(ConfigurationName)\&quot;&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				InlineFunctionExpansion="2"
-				AdditionalIncludeDirectories="$(ProjectDir)/..; $(ProjectDir)/../../include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGLESV2_EXPORTS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_SECURE_SCL=0"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702;4718"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="3"
-				WarnAsError="true"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="d3d9.lib D3dx9.lib d3dcompiler.lib"
-				LinkIncremental="1"
-				IgnoreAllDefaultLibraries="false"
-				ModuleDefinitionFile="libGLESv2.def"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -381,14 +209,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HandleAllocator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\IndexDataManager.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\libGLESv2.cpp"
 				>
 			</File>
@@ -401,11 +221,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Query.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\common\RefCountObject.cpp"
+				RelativePath=".\RefCountObject.cpp"
 				>
 			</File>
 			<File
@@ -428,10 +244,18 @@
 				RelativePath=".\utilities.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\VertexDataManager.cpp"
+			<Filter
+				Name="Geometry"
 				>
-			</File>
+				<File
+					RelativePath=".\geometry\IndexDataManager.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\geometry\VertexDataManager.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -471,14 +295,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HandleAllocator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\IndexDataManager.h"
-				>
-			</File>
-			<File
 				RelativePath=".\main.h"
 				>
 			</File>
@@ -491,19 +307,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Query.h"
-				>
-			</File>
-			<File
-				RelativePath="..\common\RefCountObject.h"
+				RelativePath=".\RefCountObject.h"
 				>
 			</File>
 			<File
 				RelativePath=".\Renderbuffer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
@@ -522,25 +330,25 @@
 				RelativePath=".\utilities.h"
 				>
 			</File>
-			<File
-				RelativePath="..\common\version.h"
+			<Filter
+				Name="Geometry"
 				>
-			</File>
-			<File
-				RelativePath=".\vertexconversion.h"
-				>
-			</File>
-			<File
-				RelativePath=".\VertexDataManager.h"
-				>
-			</File>
+				<File
+					RelativePath=".\geometry\IndexDataManager.h"
+					>
+				</File>
+				<File
+					RelativePath=".\geometry\vertexconversion.h"
+					>
+				</File>
+				<File
+					RelativePath=".\geometry\VertexDataManager.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\libGLESv2.def"
-			>
-		</File>
-		<File
-			RelativePath=".\libGLESv2.rc"
 			>
 		</File>
 	</Files>

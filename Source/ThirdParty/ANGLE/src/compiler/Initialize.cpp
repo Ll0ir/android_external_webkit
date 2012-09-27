@@ -19,7 +19,7 @@
 // Prototypes for built-in functions seen by both vertex and fragment shaders.
 //
 //============================================================================
-static TString BuiltInFunctionsCommon(const ShBuiltInResources& resources)
+static TString BuiltInFunctionsCommon()
 {
     TString s;
 
@@ -311,26 +311,6 @@ static TString BuiltInFunctionsCommon(const ShBuiltInResources& resources)
     s.append(TString("bvec4 not(bvec4 x);"));
 
     //
-    // Texture Functions.
-    //
-    s.append(TString("vec4 texture2D(sampler2D sampler, vec2 coord);"));
-    s.append(TString("vec4 texture2DProj(sampler2D sampler, vec3 coord);"));
-    s.append(TString("vec4 texture2DProj(sampler2D sampler, vec4 coord);"));
-    s.append(TString("vec4 textureCube(samplerCube sampler, vec3 coord);"));
-
-    if (resources.OES_EGL_image_external) {
-        s.append(TString("vec4 texture2D(samplerExternalOES sampler, vec2 coord);"));
-        s.append(TString("vec4 texture2DProj(samplerExternalOES sampler, vec3 coord);"));
-        s.append(TString("vec4 texture2DProj(samplerExternalOES sampler, vec4 coord);"));
-    }
-
-    if (resources.ARB_texture_rectangle) {
-        s.append(TString("vec4 texture2DRect(sampler2DRect sampler, vec2 coord);"));
-        s.append(TString("vec4 texture2DRectProj(sampler2DRect sampler, vec3 coord);"));
-        s.append(TString("vec4 texture2DRectProj(sampler2DRect sampler, vec4 coord);"));
-    }
-
-    //
     // Noise functions.
     //
     //s.append(TString("float noise1(float x);"));
@@ -373,10 +353,17 @@ static TString BuiltInFunctionsVertex(const ShBuiltInResources& resources)
     //
     // Texture Functions.
     //
-    s.append(TString("vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod);"));
-    s.append(TString("vec4 texture2DProjLod(sampler2D sampler, vec3 coord, float lod);"));
-    s.append(TString("vec4 texture2DProjLod(sampler2D sampler, vec4 coord, float lod);"));
-    s.append(TString("vec4 textureCubeLod(samplerCube sampler, vec3 coord, float lod);"));
+    if (resources.MaxVertexTextureImageUnits > 0) {
+        s.append(TString("vec4 texture2D(sampler2D sampler, vec2 coord);"));
+        s.append(TString("vec4 texture2DProj(sampler2D sampler, vec3 coord);"));
+        s.append(TString("vec4 texture2DProj(sampler2D sampler, vec4 coord);"));
+        s.append(TString("vec4 textureCube(samplerCube sampler, vec3 coord);"));
+
+        s.append(TString("vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod);"));
+        s.append(TString("vec4 texture2DProjLod(sampler2D sampler, vec3 coord, float lod);"));
+        s.append(TString("vec4 texture2DProjLod(sampler2D sampler, vec4 coord, float lod);"));
+        s.append(TString("vec4 textureCubeLod(samplerCube sampler, vec3 coord, float lod);"));
+    }
 
     return s;
 }
@@ -393,6 +380,11 @@ static TString BuiltInFunctionsFragment(const ShBuiltInResources& resources)
     //
     // Texture Functions.
     //
+    s.append(TString("vec4 texture2D(sampler2D sampler, vec2 coord);"));
+    s.append(TString("vec4 texture2DProj(sampler2D sampler, vec3 coord);"));
+    s.append(TString("vec4 texture2DProj(sampler2D sampler, vec4 coord);"));
+    s.append(TString("vec4 textureCube(samplerCube sampler, vec3 coord);"));
+
     s.append(TString("vec4 texture2D(sampler2D sampler, vec2 coord, float bias);"));
     s.append(TString("vec4 texture2DProj(sampler2D sampler, vec3 coord, float bias);"));
     s.append(TString("vec4 texture2DProj(sampler2D sampler, vec4 coord, float bias);"));
@@ -498,14 +490,14 @@ void TBuiltIns::initialize(ShShaderType type, ShShaderSpec spec,
     switch (type) {
     case SH_FRAGMENT_SHADER:
         builtInStrings.push_back(DefaultPrecisionFragment());
-        builtInStrings.push_back(BuiltInFunctionsCommon(resources));
+        builtInStrings.push_back(BuiltInFunctionsCommon());
         builtInStrings.push_back(BuiltInFunctionsFragment(resources));
         builtInStrings.push_back(StandardUniforms());
         break;
 
     case SH_VERTEX_SHADER:
         builtInStrings.push_back(DefaultPrecisionVertex());
-        builtInStrings.push_back(BuiltInFunctionsCommon(resources));
+        builtInStrings.push_back(BuiltInFunctionsCommon());
         builtInStrings.push_back(BuiltInFunctionsVertex(resources));
         builtInStrings.push_back(StandardUniforms());
         break;
@@ -622,7 +614,7 @@ void IdentifyBuiltIns(ShShaderType type, ShShaderSpec spec,
     switch(type) {
     case SH_FRAGMENT_SHADER: {
             // Set up gl_FragData.  The array size.
-            TType fragData(EbtFloat, EbpMedium, EvqFragData, 4, false, true);
+            TType fragData(EbtFloat, EbpMedium, EvqFragColor,   4, false, true);
             fragData.setArraySize(resources.MaxDrawBuffers);
             symbolTable.insert(*new TVariable(NewPoolTString("gl_FragData"),    fragData));
         }
@@ -635,9 +627,5 @@ void InitExtensionBehavior(const ShBuiltInResources& resources,
                            TExtensionBehavior& extBehavior)
 {
     if (resources.OES_standard_derivatives)
-        extBehavior["GL_OES_standard_derivatives"] = EBhUndefined;
-    if (resources.OES_EGL_image_external)
-        extBehavior["GL_OES_EGL_image_external"] = EBhUndefined;
-    if (resources.ARB_texture_rectangle)
-        extBehavior["GL_ARB_texture_rectangle"] = EBhUndefined;
+        extBehavior["GL_OES_standard_derivatives"] = EBhDisable;
 }

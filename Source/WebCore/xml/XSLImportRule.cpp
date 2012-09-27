@@ -26,7 +26,6 @@
 
 #include "CachedXSLStyleSheet.h"
 #include "CachedResourceLoader.h"
-#include "Document.h"
 #include "XSLStyleSheet.h"
 
 namespace WebCore {
@@ -99,8 +98,7 @@ void XSLImportRule::loadSheet()
             return;
     }
     
-    ResourceRequest request(cachedResourceLoader->document()->completeURL(absHref));
-    m_cachedSheet = cachedResourceLoader->requestXSLStyleSheet(request);
+    m_cachedSheet = cachedResourceLoader->requestXSLStyleSheet(absHref);
     
     if (m_cachedSheet) {
         m_cachedSheet->addClient(this);

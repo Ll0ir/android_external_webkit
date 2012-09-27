@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -11,7 +11,6 @@
 #define LIBGLESV2_PROGRAM_H_
 
 #include <d3dx9.h>
-#include <d3dcompiler.h>
 #include <string>
 #include <vector>
 #include <set>
@@ -28,35 +27,26 @@ class VertexShader;
 // Helper struct representing a single shader uniform
 struct Uniform
 {
-    Uniform(GLenum type, const std::string &_name, unsigned int arraySize);
+    Uniform(GLenum type, const std::string &name, unsigned int arraySize);
 
     ~Uniform();
 
-    bool isArray();
-
     const GLenum type;
-    const std::string _name;   // Decorated name
-    const std::string name;    // Undecorated name
+    const std::string name;
     const unsigned int arraySize;
 
     unsigned char *data;
     bool dirty;
 
-    struct RegisterInfo
-    {
-        int registerSet;
-        int registerIndex;
-        int registerCount;
-    };
-
-    RegisterInfo ps;
-    RegisterInfo vs;
+    D3DXHANDLE vsHandle;
+    D3DXHANDLE psHandle;
+    bool handlesSet;
 };
 
 // Struct used for correlating uniforms/elements of uniform arrays to handles
 struct UniformLocation
 {
-    UniformLocation(const std::string &_name, unsigned int element, unsigned int index);
+    UniformLocation(const std::string &name, unsigned int element, unsigned int index);
 
     std::string name;
     unsigned int element;
@@ -81,11 +71,14 @@ class Program
     GLuint getAttributeLocation(const char *name);
     int getSemanticIndex(int attributeIndex);
 
-    GLint getSamplerMapping(SamplerType type, unsigned int samplerIndex);
-    TextureType getSamplerTextureType(SamplerType type, unsigned int samplerIndex);
-    GLint getUsedSamplerRange(SamplerType type);
+    void dirtyAllSamplers();
 
-    GLint getUniformLocation(std::string name);
+    GLint getSamplerMapping(unsigned int samplerIndex);
+    SamplerType getSamplerType(unsigned int samplerIndex);
+    bool isSamplerDirty(unsigned int samplerIndex) const;
+    void setSamplerDirty(unsigned int samplerIndex, bool dirty);
+
+    GLint getUniformLocation(const char *name, bool decorated);
     bool setUniform1fv(GLint location, GLsizei count, const GLfloat *v);
     bool setUniform2fv(GLint location, GLsizei count, const GLfloat *v);
     bool setUniform3fv(GLint location, GLsizei count, const GLfloat *v);
@@ -98,12 +91,12 @@ class Program
     bool setUniform3iv(GLint location, GLsizei count, const GLint *v);
     bool setUniform4iv(GLint location, GLsizei count, const GLint *v);
 
-    bool getUniformfv(GLint location, GLsizei *bufSize, GLfloat *params);
-    bool getUniformiv(GLint location, GLsizei *bufSize, GLint *params);
+    bool getUniformfv(GLint location, GLfloat *params);
+    bool getUniformiv(GLint location, GLint *params);
 
     GLint getDxDepthRangeLocation() const;
     GLint getDxDepthLocation() const;
-    GLint getDxCoordLocation() const;
+    GLint getDxViewportLocation() const;
     GLint getDxHalfPixelSizeLocation() const;
     GLint getDxFrontCCWLocation() const;
     GLint getDxPointsOrLinesLocation() const;
@@ -132,18 +125,15 @@ class Program
     bool isFlaggedForDeletion() const;
 
     void validate();
-    bool validateSamplers(bool logErrors);
+    bool validateSamplers() const;
     bool isValidated() const;
 
     unsigned int getSerial() const;
 
-    static std::string decorateAttribute(const std::string &name);    // Prepend an underscore
-    static std::string undecorateUniform(const std::string &_name);   // Remove leading underscore
-
   private:
     DISALLOW_COPY_AND_ASSIGN(Program);
 
-    ID3D10Blob *compileToBinary(const char *hlsl, const char *profile, ID3DXConstantTable **constantTable);
+    ID3DXBuffer *compileToBinary(const char *hlsl, const char *profile, ID3DXConstantTable **constantTable);
     void unlink(bool destroy = false);
 
     int packVaryings(const Varying *packing[][4]);
@@ -154,25 +144,34 @@ class Program
 
     bool linkUniforms(ID3DXConstantTable *constantTable);
     bool defineUniform(const D3DXHANDLE &constantHandle, const D3DXCONSTANT_DESC &constantDescription, std::string name = "");
-    bool defineUniform(const D3DXCONSTANT_DESC &constantDescription, const std::string &name);
-    Uniform *createUniform(const D3DXCONSTANT_DESC &constantDescription, const std::string &name);
-    bool applyUniformnfv(Uniform *targetUniform, const GLfloat *v);
-    bool applyUniform1iv(Uniform *targetUniform, GLsizei count, const GLint *v);
-    bool applyUniform2iv(Uniform *targetUniform, GLsizei count, const GLint *v);
-    bool applyUniform3iv(Uniform *targetUniform, GLsizei count, const GLint *v);
-    bool applyUniform4iv(Uniform *targetUniform, GLsizei count, const GLint *v);
-    void applyUniformniv(Uniform *targetUniform, GLsizei count, const D3DXVECTOR4 *vector);
-    void applyUniformnbv(Uniform *targetUniform, GLsizei count, int width, const GLboolean *v);
+    bool defineUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &name);
+    Uniform *createUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &name);
+    bool applyUniform1bv(GLint location, GLsizei count, const GLboolean *v);
+    bool applyUniform2bv(GLint location, GLsizei count, const GLboolean *v);
+    bool applyUniform3bv(GLint location, GLsizei count, const GLboolean *v);
+    bool applyUniform4bv(GLint location, GLsizei count, const GLboolean *v);
+    bool applyUniform1fv(GLint location, GLsizei count, const GLfloat *v);
+    bool applyUniform2fv(GLint location, GLsizei count, const GLfloat *v);
+    bool applyUniform3fv(GLint location, GLsizei count, const GLfloat *v);
+    bool applyUniform4fv(GLint location, GLsizei count, const GLfloat *v);
+    bool applyUniformMatrix2fv(GLint location, GLsizei count, const GLfloat *value);
+    bool applyUniformMatrix3fv(GLint location, GLsizei count, const GLfloat *value);
+    bool applyUniformMatrix4fv(GLint location, GLsizei count, const GLfloat *value);
+    bool applyUniform1iv(GLint location, GLsizei count, const GLint *v);
+    bool applyUniform2iv(GLint location, GLsizei count, const GLint *v);
+    bool applyUniform3iv(GLint location, GLsizei count, const GLint *v);
+    bool applyUniform4iv(GLint location, GLsizei count, const GLint *v);
 
-    void initializeConstantHandles(Uniform *targetUniform, Uniform::RegisterInfo *rs, ID3DXConstantTable *constantTable);
+    void getConstantHandles(Uniform *targetUniform, D3DXHANDLE *constantPS, D3DXHANDLE *constantVS);
 
-    void appendToInfoLogSanitized(const char *message);
     void appendToInfoLog(const char *info, ...);
     void resetInfoLog();
 
+    static std::string decorate(const std::string &string);     // Prepend an underscore
+    static std::string undecorate(const std::string &string);   // Remove leading underscore
+
     static unsigned int issueSerial();
 
-    IDirect3DDevice9 *mDevice;
     FragmentShader *mFragmentShader;
     VertexShader *mVertexShader;
 
@@ -192,13 +191,11 @@ class Program
     {
         bool active;
         GLint logicalTextureUnit;
-        TextureType textureType;
+        SamplerType type;
+        bool dirty;
     };
 
-    Sampler mSamplersPS[MAX_TEXTURE_IMAGE_UNITS];
-    Sampler mSamplersVS[MAX_VERTEX_TEXTURE_IMAGE_UNITS_VTF];
-    GLuint mUsedVertexSamplerRange;
-    GLuint mUsedPixelSamplerRange;
+    Sampler mSamplers[MAX_TEXTURE_IMAGE_UNITS];
 
     typedef std::vector<Uniform*> UniformArray;
     UniformArray mUniforms;
@@ -207,7 +204,7 @@ class Program
 
     GLint mDxDepthRangeLocation;
     GLint mDxDepthLocation;
-    GLint mDxCoordLocation;
+    GLint mDxViewportLocation;
     GLint mDxHalfPixelSizeLocation;
     GLint mDxFrontCCWLocation;
     GLint mDxPointsOrLinesLocation;

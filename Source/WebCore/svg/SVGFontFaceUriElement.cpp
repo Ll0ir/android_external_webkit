@@ -95,8 +95,7 @@ void SVGFontFaceUriElement::loadFont()
     String href = getAttribute(XLinkNames::hrefAttr);
     if (!href.isNull()) {        
         CachedResourceLoader* cachedResourceLoader = document()->cachedResourceLoader();
-        ResourceRequest request(document()->completeURL(href));
-        m_cachedFont = cachedResourceLoader->requestFont(request);
+        m_cachedFont = cachedResourceLoader->requestFont(href);
         if (m_cachedFont) {
             m_cachedFont->addClient(this);
             m_cachedFont->beginLoadIfNeeded(cachedResourceLoader);

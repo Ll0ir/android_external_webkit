@@ -1,7 +1,6 @@
 /*
  * Copyright 2007, The Android Open Source Project
- * Copyright (c) 2011, 2012 Code Aurora Forum. All rights reserved.
- * Copyright (C) 2011, Sony Ericsson Mobile Communications AB
+ * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -136,9 +135,6 @@ struct FieldIds {
         mSyntheticLinksEnabled = env->GetFieldID(clazz, "mSyntheticLinksEnabled", "Z");
         mUseDoubleTree = env->GetFieldID(clazz, "mUseDoubleTree", "Z");
         mPageCacheCapacity = env->GetFieldID(clazz, "mPageCacheCapacity", "I");
-#if ENABLE(WEBGL)
-        mWebGLEnabled = env->GetFieldID(clazz, "mWebGLEnabled", "Z");
-#endif
 #if ENABLE(WEB_AUTOFILL)
         mAutoFillEnabled = env->GetFieldID(clazz, "mAutoFillEnabled", "Z");
         mAutoFillProfile = env->GetFieldID(clazz, "mAutoFillProfile", "Landroid/webkit/WebSettingsClassic$AutoFillProfile;");
@@ -202,9 +198,6 @@ struct FieldIds {
         ALOG_ASSERT(mUseDoubleTree, "Could not find field mUseDoubleTree");
         ALOG_ASSERT(mPageCacheCapacity, "Could not find field mPageCacheCapacity");
         ALOG_ASSERT(mPasswordEchoEnabled, "Could not find field mPasswordEchoEnabled");
-#if ENABLE(WEBGL)
-        ALOG_ASSERT(mWebGLEnabled, "Could not find field mWebGLEnabled");
-#endif
 
         jclass enumClass = env->FindClass("java/lang/Enum");
         ALOG_ASSERT(enumClass, "Could not find Enum class!");
@@ -256,9 +249,6 @@ struct FieldIds {
     jfieldID mSyntheticLinksEnabled;
     jfieldID mUseDoubleTree;
     jfieldID mPageCacheCapacity;
-#if ENABLE(WEBGL)
-    jfieldID mWebGLEnabled;
-#endif
     // Ordinal() method and value field for enums
     jmethodID mOrdinal;
     jfieldID  mTextSizeValue;
@@ -598,11 +588,6 @@ public:
         } else
             s->setUsesPageCache(false);
 
-#if ENABLE(WEBGL)
-        flag = env->GetBooleanField(obj, gFieldIds->mWebGLEnabled);
-        s->setWebGLEnabled(flag);
-#endif
-
 #if ENABLE(WEB_AUTOFILL)
         flag = env->GetBooleanField(obj, gFieldIds->mAutoFillEnabled);
         // TODO: This updates the Settings WebCore side with the user's
@@ -639,16 +624,8 @@ public:
                 gFieldIds->mPasswordEchoEnabled);
         s->setPasswordEchoEnabled(echoPassword);
     }
-
-    static bool IsWebGLAvailable(JNIEnv* env, jobject obj)
-    {
-#if !ENABLE(WEBGL)
-        return false;
-#else
-        return true;
-#endif
-    }
 };
+
 
 //-------------------------------------------------------------
 // JNI registration
@@ -656,9 +633,7 @@ public:
 
 static JNINativeMethod gWebSettingsMethods[] = {
     { "nativeSync", "(I)V",
-        (void*) WebSettings::Sync },
-    { "nativeIsWebGLAvailable", "()Z",
-        (void*) WebSettings::IsWebGLAvailable }
+        (void*) WebSettings::Sync }
 };
 
 int registerWebSettings(JNIEnv* env)

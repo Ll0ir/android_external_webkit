@@ -55,8 +55,8 @@
 
 namespace WebCore {
 
-CachedFont::CachedFont(const ResourceRequest& resourceRequest)
-    : CachedResource(resourceRequest, FontResource)
+CachedFont::CachedFont(const String &url)
+    : CachedResource(url, FontResource)
     , m_fontData(0)
     , m_loadInitiated(false)
 {

@@ -49,7 +49,7 @@ struct FontCustomPlatformData;
 
 class CachedFont : public CachedResource {
 public:
-    CachedFont(const ResourceRequest&);
+    CachedFont(const String& url);
     virtual ~CachedFont();
     
     virtual void load(CachedResourceLoader* cachedResourceLoader);

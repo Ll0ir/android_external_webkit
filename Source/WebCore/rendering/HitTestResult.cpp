@@ -327,7 +327,7 @@ KURL HitTestResult::absoluteMediaURL() const
 {
 #if ENABLE(VIDEO)
     if (HTMLMediaElement* mediaElt = mediaElement())
-        return mediaElt->currentSrc();
+        return m_innerNonSharedNode->document()->completeURL(stripLeadingAndTrailingHTMLSpaces(mediaElt->currentSrc()));
     return KURL();
 #else
     return KURL();

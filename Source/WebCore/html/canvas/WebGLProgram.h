@@ -42,21 +42,23 @@ public:
 
     static PassRefPtr<WebGLProgram> create(WebGLRenderingContext*);
 
-    unsigned numActiveAttribLocations();
-    GC3Dint getActiveAttribLocation(GC3Duint index);
+    // cacheActiveAttribLocation() is only called once after linkProgram()
+    // succeeds.
+    bool cacheActiveAttribLocations();
+    unsigned numActiveAttribLocations() const;
+    GC3Dint getActiveAttribLocation(GC3Duint index) const;
 
-    bool isUsingVertexAttrib0();
+    bool isUsingVertexAttrib0() const;
 
-    bool getLinkStatus();
-    void setLinkStatus(bool);
+    bool getLinkStatus() const { return m_linkStatus; }
+    void setLinkStatus(bool status) { m_linkStatus = status; }
 
     unsigned getLinkCount() const { return m_linkCount; }
 
     // This is to be called everytime after the program is successfully linked.
     // We don't deal with integer overflow here, assuming in reality a program
     // will never be linked so many times.
-    // Also, we invalidate the cached program info.
-    void increaseLinkCount();
+    void increaseLinkCount() { ++m_linkCount; }
 
     WebGLShader* getAttachedShader(GC3Denum);
     bool attachShader(WebGLShader*);
@@ -70,9 +72,6 @@ protected:
 private:
     virtual bool isProgram() const { return true; }
 
-    void cacheActiveAttribLocations(GraphicsContext3D*);
-    void cacheInfoIfNeeded();
-
     Vector<GC3Dint> m_activeAttribLocations;
 
     GC3Dint m_linkStatus;
@@ -83,8 +82,6 @@ private:
 
     RefPtr<WebGLShader> m_vertexShader;
     RefPtr<WebGLShader> m_fragmentShader;
-
-    bool m_infoValid;
 };
 
 } // namespace WebCore

@@ -42,7 +42,6 @@ WebGLProgram::WebGLProgram(WebGLRenderingContext* ctx)
     : WebGLObject(ctx)
     , m_linkStatus(false)
     , m_linkCount(0)
-    , m_infoValid(true)
 {
     setObject(context()->graphicsContext3D()->createProgram());
 }
@@ -60,46 +59,48 @@ void WebGLProgram::deleteObjectImpl(Platform3DObject obj)
     }
 }
 
-unsigned WebGLProgram::numActiveAttribLocations()
+bool WebGLProgram::cacheActiveAttribLocations()
 {
-    cacheInfoIfNeeded();
+    m_activeAttribLocations.clear();
+    if (!object())
+        return false;
+    GraphicsContext3D* context3d = context()->graphicsContext3D();
+
+    // Assume link status has already been cached.
+    if (!m_linkStatus)
+        return false;
+
+    GC3Dint numAttribs = 0;
+    context3d->getProgramiv(object(), GraphicsContext3D::ACTIVE_ATTRIBUTES, &numAttribs);
+    m_activeAttribLocations.resize(static_cast<size_t>(numAttribs));
+    for (int i = 0; i < numAttribs; ++i) {
+        ActiveInfo info;
+        context3d->getActiveAttrib(object(), i, info);
+        m_activeAttribLocations[i] = context3d->getAttribLocation(object(), info.name.charactersWithNullTermination());
+    }
+
+    return true;
+}
+
+unsigned WebGLProgram::numActiveAttribLocations() const
+{
     return m_activeAttribLocations.size();
 }
 
-GC3Dint WebGLProgram::getActiveAttribLocation(GC3Duint index)
+GC3Dint WebGLProgram::getActiveAttribLocation(GC3Duint index) const
 {
-    cacheInfoIfNeeded();
     if (index >= numActiveAttribLocations())
         return -1;
     return m_activeAttribLocations[index];
 }
 
-bool WebGLProgram::isUsingVertexAttrib0()
+bool WebGLProgram::isUsingVertexAttrib0() const
 {
-    cacheInfoIfNeeded();
     for (unsigned ii = 0; ii < numActiveAttribLocations(); ++ii) {
         if (!getActiveAttribLocation(ii))
             return true;
     }
     return false;
-}
-
-bool WebGLProgram::getLinkStatus()
-{
-    cacheInfoIfNeeded();
-    return m_linkStatus;
-}
-
-void WebGLProgram::setLinkStatus(bool status)
-{
-    cacheInfoIfNeeded();
-    m_linkStatus = status;
-}
-
-void WebGLProgram::increaseLinkCount()
-{
-    ++m_linkCount;
-    m_infoValid = false;
 }
 
 WebGLShader* WebGLProgram::getAttachedShader(GC3Denum type)
@@ -152,39 +153,6 @@ bool WebGLProgram::detachShader(WebGLShader* shader)
     default:
         return false;
     }
-}
-
-void WebGLProgram::cacheActiveAttribLocations(GraphicsContext3D* context3d)
-{
-    m_activeAttribLocations.clear();
-
-    GC3Dint numAttribs = 0;
-    context3d->getProgramiv(object(), GraphicsContext3D::ACTIVE_ATTRIBUTES, &numAttribs);
-    m_activeAttribLocations.resize(static_cast<size_t>(numAttribs));
-    for (int i = 0; i < numAttribs; ++i) {
-        ActiveInfo info;
-        context3d->getActiveAttrib(object(), i, info);
-        m_activeAttribLocations[i] = context3d->getAttribLocation(object(), info.name.charactersWithNullTermination());
-    }
-}
-
-void WebGLProgram::cacheInfoIfNeeded()
-{
-    if (m_infoValid)
-        return;
-
-    if (!object())
-        return;
-
-    GraphicsContext3D* ctx = context()->graphicsContext3D();
-    if (!ctx)
-        return;
-    GC3Dint linkStatus = 0;
-    ctx->getProgramiv(object(), GraphicsContext3D::LINK_STATUS, &linkStatus);
-    m_linkStatus = linkStatus;
-    if (m_linkStatus)
-        cacheActiveAttribLocations(ctx);
-    m_infoValid = true;
 }
 
 }

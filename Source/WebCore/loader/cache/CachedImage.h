@@ -38,7 +38,7 @@ class CachedImage : public CachedResource, public ImageObserver {
     friend class MemoryCache;
 
 public:
-    CachedImage(const ResourceRequest&);
+    CachedImage(const String& url);
     CachedImage(Image*);
     virtual ~CachedImage();
     

@@ -11,10 +11,6 @@
 
 class ConstantUnion {
 public:
-    ConstantUnion()
-    {
-        iConst = 0;
-    }
 
     POOL_ALLOCATOR_NEW_DELETE(GlobalPoolAllocator)        
     void setIConst(int i) {iConst = i; type = EbtInt; }
@@ -30,17 +26,26 @@ public:
 
     bool operator==(const int i) const
     {
-        return i == iConst;
+        if (i == iConst)
+            return true;
+
+        return false;
     }
 
     bool operator==(const float f) const
     {
-        return f == fConst;
+        if (f == fConst)
+            return true;
+
+        return false;
     }
 
     bool operator==(const bool b) const
     {
-        return b == bConst;
+        if (b == bConst)
+            return true;
+
+        return false;
     }
 
     bool operator==(const ConstantUnion& constant) const
@@ -50,14 +55,23 @@ public:
 
         switch (type) {
         case EbtInt:
-            return constant.iConst == iConst;
+            if (constant.iConst == iConst)
+                return true;
+
+            break;
         case EbtFloat:
-            return constant.fConst == fConst;
+            if (constant.fConst == fConst)
+                return true;
+
+            break;
         case EbtBool:
-            return constant.bConst == bConst;
-        default:
-            return false;
+            if (constant.bConst == bConst)
+                return true;
+
+            break;
         }
+
+        return false;
     }
 
     bool operator!=(const int i) const
@@ -85,12 +99,21 @@ public:
         assert(type == constant.type);
         switch (type) {
         case EbtInt:
-            return iConst > constant.iConst;
+            if (iConst > constant.iConst)
+                return true;
+
+            return false;
         case EbtFloat:
-            return fConst > constant.fConst;
+            if (fConst > constant.fConst)
+                return true;
+
+            return false;
         default:
-            return false;   // Invalid operation, handled at semantic analysis
+            assert(false && "Default missing");
+            return false;
         }
+
+        return false;
     }
 
     bool operator<(const ConstantUnion& constant) const
@@ -98,12 +121,21 @@ public:
         assert(type == constant.type);
         switch (type) {
         case EbtInt:
-            return iConst < constant.iConst;
+            if (iConst < constant.iConst)
+                return true;
+
+            return false;
         case EbtFloat:
-            return fConst < constant.fConst;
+            if (fConst < constant.fConst)
+                return true;
+
+            return false;
         default:
-            return false;   // Invalid operation, handled at semantic analysis
+            assert(false && "Default missing");
+            return false;
         }
+
+        return false;
     }
 
     ConstantUnion operator+(const ConstantUnion& constant) const

@@ -248,8 +248,7 @@ bool ScriptElement::requestScript(const String& sourceUrl)
 
     ASSERT(!m_cachedScript);
     // FIXME: If sourceUrl is empty, we should dispatchErrorEvent().
-    ResourceRequest request(m_element->document()->completeURL(sourceUrl));
-    m_cachedScript = m_element->document()->cachedResourceLoader()->requestScript(request, scriptCharset());
+    m_cachedScript = m_element->document()->cachedResourceLoader()->requestScript(sourceUrl, scriptCharset());
     m_isExternalScript = true;
 
     if (m_cachedScript)

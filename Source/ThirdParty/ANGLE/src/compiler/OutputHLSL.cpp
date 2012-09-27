@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -33,11 +33,8 @@ OutputHLSL::OutputHLSL(TParseContext &context) : TIntermTraverser(true, true, tr
     mUsesTexture2D_bias = false;
     mUsesTexture2DProj = false;
     mUsesTexture2DProj_bias = false;
-    mUsesTexture2DProjLod = false;
-    mUsesTexture2DLod = false;
     mUsesTextureCube = false;
     mUsesTextureCube_bias = false;
-    mUsesTextureCubeLod = false;
     mUsesDepthRange = false;
     mUsesFragCoord = false;
     mUsesPointCoord = false;
@@ -45,12 +42,9 @@ OutputHLSL::OutputHLSL(TParseContext &context) : TIntermTraverser(true, true, tr
     mUsesPointSize = false;
     mUsesXor = false;
     mUsesMod1 = false;
-    mUsesMod2v = false;
-    mUsesMod2f = false;
-    mUsesMod3v = false;
-    mUsesMod3f = false;
-    mUsesMod4v = false;
-    mUsesMod4f = false;
+    mUsesMod2 = false;
+    mUsesMod3 = false;
+    mUsesMod4 = false;
     mUsesFaceforward1 = false;
     mUsesFaceforward2 = false;
     mUsesFaceforward3 = false;
@@ -67,10 +61,7 @@ OutputHLSL::OutputHLSL(TParseContext &context) : TIntermTraverser(true, true, tr
     mUsesEqualBVec2 = false;
     mUsesEqualBVec3 = false;
     mUsesEqualBVec4 = false;
-    mUsesAtan2_1 = false;
-    mUsesAtan2_2 = false;
-    mUsesAtan2_3 = false;
-    mUsesAtan2_4 = false;
+    mUsesAtan2 = false;
 
     mScopeDepth = 0;
 
@@ -142,7 +133,7 @@ void OutputHLSL::header()
                 {
                     if (mReferencedUniforms.find(name.c_str()) != mReferencedUniforms.end())
                     {
-                        uniforms += "uniform " + typeString(type) + " " + decorateUniform(name, type) + arrayString(type) + ";\n";
+                        uniforms += "uniform " + typeString(type) + " " + decorate(name) + arrayString(type) + ";\n";
                     }
                 }
                 else if (qualifier == EvqVaryingIn || qualifier == EvqInvariantVaryingIn)
@@ -191,7 +182,7 @@ void OutputHLSL::header()
 
         if (mUsesFragCoord)
         {
-            out << "uniform float4 dx_Coord;\n"
+            out << "uniform float4 dx_Viewport;\n"
                    "uniform float2 dx_Depth;\n";
         }
 
@@ -205,25 +196,11 @@ void OutputHLSL::header()
         out <<  uniforms;
         out << "\n";
 
-        // The texture fetch functions "flip" the Y coordinate in one way or another. This is because textures are stored
-        // according to the OpenGL convention, i.e. (0, 0) is "bottom left", rather than the D3D convention where (0, 0)
-        // is "top left". Since the HLSL texture fetch functions expect textures to be stored according to the D3D
-        // convention, the Y coordinate passed to these functions is adjusted to compensate.
-        //
-        // The simplest case is texture2D where the mapping is Y -> 1-Y, which maps [0, 1] -> [1, 0].
-        //
-        // The texture2DProj functions are more complicated because the projection divides by either Z or W. For the vec3
-        // case, the mapping is Y -> Z-Y or Y/Z -> 1-Y/Z, which again maps [0, 1] -> [1, 0].
-        //
-        // For cube textures the mapping is Y -> -Y, which maps [-1, 1] -> [1, -1]. This is not sufficient on its own for the
-        // +Y and -Y faces, which are now on the "wrong sides" of the cube. This is compensated for by exchanging the
-        // +Y and -Y faces everywhere else throughout the code.
-        
         if (mUsesTexture2D)
         {
             out << "float4 gl_texture2D(sampler2D s, float2 t)\n"
                    "{\n"
-                   "    return tex2D(s, float2(t.x, 1 - t.y));\n"
+                   "    return tex2D(s, t);\n"
                    "}\n"
                    "\n";
         }
@@ -232,7 +209,7 @@ void OutputHLSL::header()
         {
             out << "float4 gl_texture2D(sampler2D s, float2 t, float bias)\n"
                    "{\n"
-                   "    return tex2Dbias(s, float4(t.x, 1 - t.y, 0, bias));\n"
+                   "    return tex2Dbias(s, float4(t.x, t.y, 0, bias));\n"
                    "}\n"
                    "\n";
         }
@@ -241,12 +218,12 @@ void OutputHLSL::header()
         {
             out << "float4 gl_texture2DProj(sampler2D s, float3 t)\n"
                    "{\n"
-                   "    return tex2Dproj(s, float4(t.x, t.z - t.y, 0, t.z));\n"
+                   "    return tex2Dproj(s, float4(t.x, t.y, 0, t.z));\n"
                    "}\n"
                    "\n"
                    "float4 gl_texture2DProj(sampler2D s, float4 t)\n"
                    "{\n"
-                   "    return tex2Dproj(s, float4(t.x, t.w - t.y, t.z, t.w));\n"
+                   "    return tex2Dproj(s, t);\n"
                    "}\n"
                    "\n";
         }
@@ -255,12 +232,12 @@ void OutputHLSL::header()
         {
             out << "float4 gl_texture2DProj(sampler2D s, float3 t, float bias)\n"
                    "{\n"
-                   "    return tex2Dbias(s, float4(t.x / t.z, 1 - (t.y / t.z), 0, bias));\n"
+                   "    return tex2Dbias(s, float4(t.x / t.z, t.y / t.z, 0, bias));\n"
                    "}\n"
                    "\n"
                    "float4 gl_texture2DProj(sampler2D s, float4 t, float bias)\n"
                    "{\n"
-                   "    return tex2Dbias(s, float4(t.x / t.w, 1 - (t.y / t.w), 0, bias));\n"
+                   "    return tex2Dbias(s, float4(t.x / t.w, t.y / t.w, 0, bias));\n"
                    "}\n"
                    "\n";
         }
@@ -269,7 +246,7 @@ void OutputHLSL::header()
         {
             out << "float4 gl_textureCube(samplerCUBE s, float3 t)\n"
                    "{\n"
-                   "    return texCUBE(s, float3(t.x, -t.y, t.z));\n"
+                   "    return texCUBE(s, t);\n"
                    "}\n"
                    "\n";
         }
@@ -278,7 +255,7 @@ void OutputHLSL::header()
         {
             out << "float4 gl_textureCube(samplerCUBE s, float3 t, float bias)\n"
                    "{\n"
-                   "    return texCUBEbias(s, float4(t.x, -t.y, t.z, bias));\n"
+                   "    return texCUBEbias(s, float4(t.x, t.y, t.z, bias));\n"
                    "}\n"
                    "\n";
         }
@@ -306,7 +283,7 @@ void OutputHLSL::header()
                 {
                     if (mReferencedUniforms.find(name.c_str()) != mReferencedUniforms.end())
                     {
-                        uniforms += "uniform " + typeString(type) + " " + decorateUniform(name, type) + arrayString(type) + ";\n";
+                        uniforms += "uniform " + typeString(type) + " " + decorate(name) + arrayString(type) + ";\n";
                     }
                 }
                 else if (qualifier == EvqAttribute)
@@ -354,84 +331,6 @@ void OutputHLSL::header()
                "\n";
         out <<  uniforms;
         out << "\n";
-
-        // The texture fetch functions "flip" the Y coordinate in one way or another. This is because textures are stored
-        // according to the OpenGL convention, i.e. (0, 0) is "bottom left", rather than the D3D convention where (0, 0)
-        // is "top left". Since the HLSL texture fetch functions expect textures to be stored according to the D3D
-        // convention, the Y coordinate passed to these functions is adjusted to compensate.
-        //
-        // The simplest case is texture2D where the mapping is Y -> 1-Y, which maps [0, 1] -> [1, 0].
-        //
-        // The texture2DProj functions are more complicated because the projection divides by either Z or W. For the vec3
-        // case, the mapping is Y -> Z-Y or Y/Z -> 1-Y/Z, which again maps [0, 1] -> [1, 0].
-        //
-        // For cube textures the mapping is Y -> -Y, which maps [-1, 1] -> [1, -1]. This is not sufficient on its own for the
-        // +Y and -Y faces, which are now on the "wrong sides" of the cube. This is compensated for by exchanging the
-        // +Y and -Y faces everywhere else throughout the code.
-        
-        if (mUsesTexture2D)
-        {
-            out << "float4 gl_texture2D(sampler2D s, float2 t)\n"
-                   "{\n"
-                   "    return tex2Dlod(s, float4(t.x, 1 - t.y, 0, 0));\n"
-                   "}\n"
-                   "\n";
-        }
-
-        if (mUsesTexture2DLod)
-        {
-            out << "float4 gl_texture2DLod(sampler2D s, float2 t, float lod)\n"
-                   "{\n"
-                   "    return tex2Dlod(s, float4(t.x, 1 - t.y, 0, lod));\n"
-                   "}\n"
-                   "\n";
-        }
-
-        if (mUsesTexture2DProj)
-        {
-            out << "float4 gl_texture2DProj(sampler2D s, float3 t)\n"
-                   "{\n"
-                   "    return tex2Dlod(s, float4(t.x / t.z, 1 - t.y / t.z, 0, 0));\n"
-                   "}\n"
-                   "\n"
-                   "float4 gl_texture2DProj(sampler2D s, float4 t)\n"
-                   "{\n"
-                   "    return tex2Dlod(s, float4(t.x / t.w, 1 - t.y / t.w, 0, 0));\n"
-                   "}\n"
-                   "\n";
-        }
-
-        if (mUsesTexture2DProjLod)
-        {
-            out << "float4 gl_texture2DProjLod(sampler2D s, float3 t, float lod)\n"
-                   "{\n"
-                   "    return tex2Dlod(s, float4(t.x / t.z, 1 - t.y / t.z, 0, lod));\n"
-                   "}\n"
-                   "\n"
-                   "float4 gl_texture2DProjLod(sampler2D s, float4 t, float lod)\n"
-                   "{\n"
-                   "    return tex2Dlod(s, float4(t.x / t.w, 1 - t.y / t.w, 0, lod));\n"
-                   "}\n"
-                   "\n";
-        }
-
-        if (mUsesTextureCube)
-        {
-            out << "float4 gl_textureCube(samplerCUBE s, float3 t)\n"
-                   "{\n"
-                   "    return texCUBElod(s, float4(t.x, -t.y, t.z, 0));\n"
-                   "}\n"
-                   "\n";
-        }
-
-        if (mUsesTextureCubeLod)
-        {
-            out << "float4 gl_textureCubeLod(samplerCUBE s, float3 t, float lod)\n"
-                   "{\n"
-                   "    return texCUBElod(s, float4(t.x, -t.y, t.z, lod));\n"
-                   "}\n"
-                   "\n";
-        }
     }
 
     if (mUsesFragCoord)
@@ -485,17 +384,8 @@ void OutputHLSL::header()
                "}\n"
                "\n";
     }
-
-    if (mUsesMod2v)
-    {
-        out << "float2 mod(float2 x, float2 y)\n"
-               "{\n"
-               "    return x - y * floor(x / y);\n"
-               "}\n"
-               "\n";
-    }
-
-    if (mUsesMod2f)
+    
+    if (mUsesMod2)
     {
         out << "float2 mod(float2 x, float y)\n"
                "{\n"
@@ -504,16 +394,7 @@ void OutputHLSL::header()
                "\n";
     }
     
-    if (mUsesMod3v)
-    {
-        out << "float3 mod(float3 x, float3 y)\n"
-               "{\n"
-               "    return x - y * floor(x / y);\n"
-               "}\n"
-               "\n";
-    }
-
-    if (mUsesMod3f)
+    if (mUsesMod3)
     {
         out << "float3 mod(float3 x, float y)\n"
                "{\n"
@@ -522,16 +403,7 @@ void OutputHLSL::header()
                "\n";
     }
 
-    if (mUsesMod4v)
-    {
-        out << "float4 mod(float4 x, float4 y)\n"
-               "{\n"
-               "    return x - y * floor(x / y);\n"
-               "}\n"
-               "\n";
-    }
-
-    if (mUsesMod4f)
+    if (mUsesMod4)
     {
         out << "float4 mod(float4 x, float y)\n"
                "{\n"
@@ -706,45 +578,12 @@ void OutputHLSL::header()
                "}\n";
     }
 
-    if (mUsesAtan2_1)
+    if (mUsesAtan2)
     {
         out << "float atanyx(float y, float x)\n"
                "{\n"
                "    if(x == 0 && y == 0) x = 1;\n"   // Avoid producing a NaN
                "    return atan2(y, x);\n"
-               "}\n";
-    }
-
-    if (mUsesAtan2_2)
-    {
-        out << "float2 atanyx(float2 y, float2 x)\n"
-               "{\n"
-               "    if(x[0] == 0 && y[0] == 0) x[0] = 1;\n"
-               "    if(x[1] == 0 && y[1] == 0) x[1] = 1;\n"
-               "    return float2(atan2(y[0], x[0]), atan2(y[1], x[1]));\n"
-               "}\n";
-    }
-
-    if (mUsesAtan2_3)
-    {
-        out << "float3 atanyx(float3 y, float3 x)\n"
-               "{\n"
-               "    if(x[0] == 0 && y[0] == 0) x[0] = 1;\n"
-               "    if(x[1] == 0 && y[1] == 0) x[1] = 1;\n"
-               "    if(x[2] == 0 && y[2] == 0) x[2] = 1;\n"
-               "    return float3(atan2(y[0], x[0]), atan2(y[1], x[1]), atan2(y[2], x[2]));\n"
-               "}\n";
-    }
-
-    if (mUsesAtan2_4)
-    {
-        out << "float4 atanyx(float4 y, float4 x)\n"
-               "{\n"
-               "    if(x[0] == 0 && y[0] == 0) x[0] = 1;\n"
-               "    if(x[1] == 0 && y[1] == 0) x[1] = 1;\n"
-               "    if(x[2] == 0 && y[2] == 0) x[2] = 1;\n"
-               "    if(x[3] == 0 && y[3] == 0) x[3] = 1;\n"
-               "    return float4(atan2(y[0], x[0]), atan2(y[1], x[1]), atan2(y[2], x[2]), atan2(y[3], x[3]));\n"
                "}\n";
     }
 }
@@ -795,22 +634,17 @@ void OutputHLSL::visitSymbol(TIntermSymbol *node)
         if (qualifier == EvqUniform)
         {
             mReferencedUniforms.insert(name.c_str());
-            out << decorateUniform(name, node->getType());
         }
         else if (qualifier == EvqAttribute)
         {
             mReferencedAttributes.insert(name.c_str());
-            out << decorate(name);
         }
         else if (qualifier == EvqVaryingOut || qualifier == EvqInvariantVaryingOut || qualifier == EvqVaryingIn || qualifier == EvqInvariantVaryingIn)
         {
             mReferencedVaryings.insert(name.c_str());
-            out << decorate(name);
         }
-        else
-        {
-            out << decorate(name);
-        }
+
+        out << decorate(name);
     }
 }
 
@@ -1068,6 +902,8 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
 
 bool OutputHLSL::visitUnary(Visit visit, TIntermUnary *node)
 {
+    TInfoSinkBase &out = mBody;
+
     switch (node->getOp())
     {
       case EOpNegative:         outputTriplet(visit, "(-", "", ")");  break;
@@ -1132,7 +968,7 @@ bool OutputHLSL::visitUnary(Visit visit, TIntermUnary *node)
       case EOpLength:           outputTriplet(visit, "length(", "", ")");    break;
       case EOpNormalize:        outputTriplet(visit, "normalize(", "", ")"); break;
       case EOpDFdx:             outputTriplet(visit, "ddx(", "", ")");       break;
-      case EOpDFdy:             outputTriplet(visit, "(-ddy(", "", "))");    break;
+      case EOpDFdy:             outputTriplet(visit, "ddy(", "", ")");       break;
       case EOpFwidth:           outputTriplet(visit, "fwidth(", "", ")");    break;        
       case EOpAny:              outputTriplet(visit, "any(", "", ")");       break;
       case EOpAll:              outputTriplet(visit, "all(", "", ")");       break;
@@ -1144,6 +980,7 @@ bool OutputHLSL::visitUnary(Visit visit, TIntermUnary *node)
 
 bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 {
+    ShShaderType shaderType = mContext.shaderType;
     TInfoSinkBase &out = mBody;
 
     switch (node->getOp())
@@ -1152,7 +989,6 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
         {
             if (mInsideFunction)
             {
-                outputLineDirective(node->getLine());
                 out << "{\n";
 
                 mScopeDepth++;
@@ -1169,8 +1005,6 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 
             for (TIntermSequence::iterator sit = node->getSequence().begin(); sit != node->getSequence().end(); sit++)
             {
-                outputLineDirective((*sit)->getLine());
-
                 if (isSingleStatement(*sit))
                 {
                     mUnfoldSelect->traverse(*sit);
@@ -1183,7 +1017,6 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 
             if (mInsideFunction)
             {
-                outputLineDirective(node->getEndLine());
                 out << "}\n";
 
                 mScopeDepth--;
@@ -1285,7 +1118,7 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
             return false;
         }
         break;
-      case EOpComma:            outputTriplet(visit, "(", ", ", ")");                break;
+      case EOpComma:            outputTriplet(visit, "", ", ", "");                break;
       case EOpFunction:
         {
             TString name = TFunction::unmangleName(node->getName());
@@ -1312,11 +1145,6 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 
                     if (symbol)
                     {
-                        if (symbol->getType().getStruct())
-                        {
-                            addConstructor(symbol->getType(), scopedStruct(symbol->getType().getTypeName()), NULL);
-                        }
-
                         out << argumentString(symbol);
 
                         if (i < arguments.size() - 1)
@@ -1329,16 +1157,13 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 
                 sequence.erase(sequence.begin());
 
-                out << ")\n";
-                
-                outputLineDirective(node->getLine());
-                out << "{\n";
-                
+                out << ")\n"
+                       "{\n";
+
                 mInsideFunction = true;
             }
             else if (visit == PostVisit)
             {
-                outputLineDirective(node->getEndLine());
                 out << "}\n";
 
                 mInsideFunction = false;
@@ -1401,33 +1226,15 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
                     }
                     else if (name == "texture2DLod")
                     {
-                        if (node->getSequence().size() == 3)
-                        {
-                            mUsesTexture2DLod = true;
-                        }
-                        else UNREACHABLE();
-
-                        out << "gl_texture2DLod(";
+                        UNIMPLEMENTED();   // Requires the vertex shader texture sampling extension
                     }
                     else if (name == "texture2DProjLod")
                     {
-                        if (node->getSequence().size() == 3)
-                        {
-                            mUsesTexture2DProjLod = true;
-                        }
-                        else UNREACHABLE();
-
-                        out << "gl_texture2DProjLod(";
+                        UNIMPLEMENTED();   // Requires the vertex shader texture sampling extension
                     }
                     else if (name == "textureCubeLod")
                     {
-                        if (node->getSequence().size() == 3)
-                        {
-                            mUsesTextureCubeLod = true;
-                        }
-                        else UNREACHABLE();
-
-                        out << "gl_textureCubeLod(";
+                        UNIMPLEMENTED();   // Requires the vertex shader texture sampling extension
                     }
                     else UNREACHABLE();
                 }
@@ -1515,17 +1322,12 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpVectorNotEqual:   outputTriplet(visit, "(", " != ", ")");                break;
       case EOpMod:
         {
-            // We need to look at the number of components in both arguments
-            switch (node->getSequence()[0]->getAsTyped()->getNominalSize() * 10
-                     + node->getSequence()[1]->getAsTyped()->getNominalSize())
+            switch (node->getSequence()[0]->getAsTyped()->getNominalSize())   // Number of components in the first argument
             {
-              case 11: mUsesMod1 = true; break;
-              case 22: mUsesMod2v = true; break;
-              case 21: mUsesMod2f = true; break;
-              case 33: mUsesMod3v = true; break;
-              case 31: mUsesMod3f = true; break;
-              case 44: mUsesMod4v = true; break;
-              case 41: mUsesMod4f = true; break;
+              case 1: mUsesMod1 = true; break;
+              case 2: mUsesMod2 = true; break;
+              case 3: mUsesMod3 = true; break;
+              case 4: mUsesMod4 = true; break;
               default: UNREACHABLE();
             }
 
@@ -1535,14 +1337,7 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpPow:              outputTriplet(visit, "pow(", ", ", ")");               break;
       case EOpAtan:
         ASSERT(node->getSequence().size() == 2);   // atan(x) is a unary operator
-        switch (node->getSequence()[0]->getAsTyped()->getNominalSize())
-        {
-          case 1: mUsesAtan2_1 = true; break;
-          case 2: mUsesAtan2_2 = true; break;
-          case 3: mUsesAtan2_3 = true; break;
-          case 4: mUsesAtan2_4 = true; break;
-          default: UNREACHABLE();
-        }
+        mUsesAtan2 = true;
         outputTriplet(visit, "atanyx(", ", ", ")");
         break;
       case EOpMin:           outputTriplet(visit, "min(", ", ", ")");           break;
@@ -1583,7 +1378,7 @@ bool OutputHLSL::visitSelection(Visit visit, TIntermSelection *node)
 
     if (node->usesTernaryOperator())
     {
-        out << "s" << mUnfoldSelect->getNextTemporaryIndex();
+        out << "t" << mUnfoldSelect->getTemporaryIndex();
     }
     else  // if/else statement
     {
@@ -1593,30 +1388,23 @@ bool OutputHLSL::visitSelection(Visit visit, TIntermSelection *node)
 
         node->getCondition()->traverse(this);
 
-        out << ")\n";
-        
-        outputLineDirective(node->getLine());
-        out << "{\n";
+        out << ")\n"
+               "{\n";
 
         if (node->getTrueBlock())
         {
             node->getTrueBlock()->traverse(this);
         }
 
-        outputLineDirective(node->getLine());
         out << ";}\n";
 
         if (node->getFalseBlock())
         {
-            out << "else\n";
+            out << "else\n"
+                   "{\n";
 
-            outputLineDirective(node->getFalseBlock()->getLine());
-            out << "{\n";
-
-            outputLineDirective(node->getFalseBlock()->getLine());
             node->getFalseBlock()->traverse(this);
 
-            outputLineDirective(node->getFalseBlock()->getLine());
             out << ";}\n";
         }
     }
@@ -1640,14 +1428,27 @@ bool OutputHLSL::visitLoop(Visit visit, TIntermLoop *node)
 
     if (node->getType() == ELoopDoWhile)
     {
-        out << "{do\n";
-
-        outputLineDirective(node->getLine());
-        out << "{\n";
+        out << "do\n"
+               "{\n";
     }
     else
     {
-        out << "{for(";
+        if (node->getInit())
+        {
+            mUnfoldSelect->traverse(node->getInit());
+        }
+        
+        if (node->getCondition())
+        {
+            mUnfoldSelect->traverse(node->getCondition());
+        }
+        
+        if (node->getExpression())
+        {
+            mUnfoldSelect->traverse(node->getExpression());
+        }
+
+        out << "for(";
         
         if (node->getInit())
         {
@@ -1668,10 +1469,8 @@ bool OutputHLSL::visitLoop(Visit visit, TIntermLoop *node)
             node->getExpression()->traverse(this);
         }
 
-        out << ")\n";
-        
-        outputLineDirective(node->getLine());
-        out << "{\n";
+        out << ")\n"
+               "{\n";
     }
 
     if (node->getBody())
@@ -1679,20 +1478,18 @@ bool OutputHLSL::visitLoop(Visit visit, TIntermLoop *node)
         node->getBody()->traverse(this);
     }
 
-    outputLineDirective(node->getLine());
-    out << ";}\n";
+    out << "}\n";
 
     if (node->getType() == ELoopDoWhile)
     {
-        outputLineDirective(node->getCondition()->getLine());
         out << "while(\n";
 
         node->getCondition()->traverse(this);
 
-        out << ");";
+        out << ")";
     }
 
-    out << "}\n";
+    out << ";\n";
 
     return false;
 }
@@ -1703,9 +1500,9 @@ bool OutputHLSL::visitBranch(Visit visit, TIntermBranch *node)
 
     switch (node->getFlowOp())
     {
-      case EOpKill:     outputTriplet(visit, "discard;\n", "", "");  break;
-      case EOpBreak:    outputTriplet(visit, "break;\n", "", "");    break;
-      case EOpContinue: outputTriplet(visit, "continue;\n", "", ""); break;
+      case EOpKill:     outputTriplet(visit, "discard", "", "");  break;
+      case EOpBreak:    outputTriplet(visit, "break", "", "");    break;
+      case EOpContinue: outputTriplet(visit, "continue", "", ""); break;
       case EOpReturn:
         if (visit == PreVisit)
         {
@@ -1720,10 +1517,7 @@ bool OutputHLSL::visitBranch(Visit visit, TIntermBranch *node)
         }
         else if (visit == PostVisit)
         {
-            if (node->getExpression())
-            {
-                out << ";\n";
-            }
+            out << ";\n";
         }
         break;
       default: UNREACHABLE();
@@ -1875,7 +1669,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
 
         if (comparator == EOpLessThan)
         {
-            int iterations = (limit - initial) / increment;
+            int iterations = (limit - initial + 1) / increment;
 
             if (iterations <= 255)
             {
@@ -1884,7 +1678,8 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
 
             while (iterations > 0)
             {
-                int clampedLimit = initial + increment * std::min(255, iterations);
+                int remainder = (limit - initial + 1) % increment;
+                int clampedLimit = initial + increment * std::min(255, iterations) - 1 - remainder;
 
                 // for(int index = initial; index < clampedLimit; index += increment)
 
@@ -1902,18 +1697,15 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
                 index->traverse(this);
                 out << " += ";
                 out << increment;
-                out << ")\n";
-                
-                outputLineDirective(node->getLine());
-                out << "{\n";
+                out << ")\n"
+                       "{\n";
 
                 if (node->getBody())
                 {
                     node->getBody()->traverse(this);
                 }
 
-                outputLineDirective(node->getLine());
-                out << ";}\n";
+                out << "}\n";
 
                 initial += 255 * increment;
                 iterations -= 255;
@@ -1942,22 +1734,6 @@ void OutputHLSL::outputTriplet(Visit visit, const TString &preString, const TStr
     else if (visit == PostVisit)
     {
         out << postString;
-    }
-}
-
-void OutputHLSL::outputLineDirective(int line)
-{
-    if ((mContext.compileOptions & SH_LINE_DIRECTIVES) && (line > 0))
-    {
-        mBody << "\n";
-        mBody << "#line " << line;
-
-        if (mContext.sourcePath)
-        {
-            mBody << " \"" << mContext.sourcePath << "\"";
-        }
-        
-        mBody << "\n";
     }
 }
 
@@ -2063,8 +1839,6 @@ TString OutputHLSL::typeString(const TType &type)
             return "sampler2D";
           case EbtSamplerCube:
             return "samplerCUBE";
-          case EbtSamplerExternalOES:
-            return "sampler2D";
         }
     }
 
@@ -2106,11 +1880,6 @@ void OutputHLSL::addConstructor(const TType &type, const TString &name, const TI
         return;   // Nameless structures don't have constructors
     }
 
-    if (type.getStruct() && mStructNames.find(decorate(name)) != mStructNames.end())
-    {
-        return;   // Already added
-    }
-
     TType ctorType = type;
     ctorType.clearArrayness();
     ctorType.setPrecision(EbpHigh);
@@ -2121,7 +1890,14 @@ void OutputHLSL::addConstructor(const TType &type, const TString &name, const TI
     typedef std::vector<TType> ParameterArray;
     ParameterArray ctorParameters;
 
-    if (type.getStruct())
+    if (parameters)
+    {
+        for (TIntermSequence::const_iterator parameter = parameters->begin(); parameter != parameters->end(); parameter++)
+        {
+            ctorParameters.push_back((*parameter)->getAsTyped()->getType());
+        }
+    }
+    else if (type.getStruct())
     {
         mStructNames.insert(decorate(name));
 
@@ -2148,13 +1924,6 @@ void OutputHLSL::addConstructor(const TType &type, const TString &name, const TI
         for (unsigned int i = 0; i < fields.size(); i++)
         {
             ctorParameters.push_back(*fields[i].type);
-        }
-    }
-    else if (parameters)
-    {
-        for (TIntermSequence::const_iterator parameter = parameters->begin(); parameter != parameters->end(); parameter++)
-        {
-            ctorParameters.push_back((*parameter)->getAsTyped()->getType());
         }
     }
     else UNREACHABLE();
@@ -2413,25 +2182,13 @@ TString OutputHLSL::structLookup(const TString &typeName)
 
 TString OutputHLSL::decorate(const TString &string)
 {
-    if (string.compare(0, 3, "gl_") != 0 && string.compare(0, 3, "dx_") != 0)
+    if (string.substr(0, 3) != "gl_" && string.substr(0, 3) != "dx_")
     {
         return "_" + string;
     }
-    
-    return string;
-}
-
-TString OutputHLSL::decorateUniform(const TString &string, const TType &type)
-{
-    if (type.isArray())
+    else
     {
-        return "ar_" + string;   // Allows identifying arrays of size 1
+        return string;
     }
-    else if (type.getBasicType() == EbtSamplerExternalOES)
-    {
-        return "ex_" + string;
-    }
-    
-    return decorate(string);
 }
 }

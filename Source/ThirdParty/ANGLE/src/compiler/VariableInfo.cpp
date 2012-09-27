@@ -63,8 +63,6 @@ static ShDataType getVariableDataType(const TType& type)
           }
       case EbtSampler2D: return SH_SAMPLER_2D;
       case EbtSamplerCube: return SH_SAMPLER_CUBE;
-      case EbtSamplerExternalOES: return SH_SAMPLER_EXTERNAL_OES;
-      case EbtSampler2DRect: return SH_SAMPLER_2D_RECT_ARB;
       default: UNREACHABLE();
     }
     return SH_NONE;
@@ -72,37 +70,32 @@ static ShDataType getVariableDataType(const TType& type)
 
 static void getBuiltInVariableInfo(const TType& type,
                                    const TString& name,
-                                   const TString& mappedName,
                                    TVariableInfoList& infoList);
 static void getUserDefinedVariableInfo(const TType& type,
                                        const TString& name,
-                                       const TString& mappedName,
                                        TVariableInfoList& infoList);
 
 // Returns info for an attribute or uniform.
 static void getVariableInfo(const TType& type,
                             const TString& name,
-                            const TString& mappedName,
                             TVariableInfoList& infoList)
 {
     if (type.getBasicType() == EbtStruct) {
         if (type.isArray()) {
             for (int i = 0; i < type.getArraySize(); ++i) {
                 TString lname = name + arrayBrackets(i);
-                TString lmappedName = mappedName + arrayBrackets(i);
-                getUserDefinedVariableInfo(type, lname, lmappedName, infoList);
+                getUserDefinedVariableInfo(type, lname, infoList);
             }
         } else {
-            getUserDefinedVariableInfo(type, name, mappedName, infoList);
+            getUserDefinedVariableInfo(type, name, infoList);
         }
     } else {
-        getBuiltInVariableInfo(type, name, mappedName, infoList);
+        getBuiltInVariableInfo(type, name, infoList);
     }
 }
 
 void getBuiltInVariableInfo(const TType& type,
                             const TString& name,
-                            const TString& mappedName,
                             TVariableInfoList& infoList)
 {
     ASSERT(type.getBasicType() != EbtStruct);
@@ -110,11 +103,9 @@ void getBuiltInVariableInfo(const TType& type,
     TVariableInfo varInfo;
     if (type.isArray()) {
         varInfo.name = (name + "[0]").c_str();
-        varInfo.mappedName = (mappedName + "[0]").c_str();
         varInfo.size = type.getArraySize();
     } else {
         varInfo.name = name.c_str();
-        varInfo.mappedName = mappedName.c_str();
         varInfo.size = 1;
     }
     varInfo.type = getVariableDataType(type);
@@ -123,17 +114,16 @@ void getBuiltInVariableInfo(const TType& type,
 
 void getUserDefinedVariableInfo(const TType& type,
                                 const TString& name,
-                                const TString& mappedName,
                                 TVariableInfoList& infoList)
 {
     ASSERT(type.getBasicType() == EbtStruct);
 
+    TString lname = name + ".";
     const TTypeList* structure = type.getStruct();
     for (size_t i = 0; i < structure->size(); ++i) {
         const TType* fieldType = (*structure)[i].type;
         getVariableInfo(*fieldType,
-                        name + "." + fieldType->getFieldName(),
-                        mappedName + "." + fieldType->getFieldName(),
+                        lname + fieldType->getFieldName(),
                         infoList);
     }
 }
@@ -196,9 +186,7 @@ bool CollectAttribsUniforms::visitAggregate(Visit, TIntermAggregate* node)
                 // cannot be initialized in a shader, we must have only
                 // TIntermSymbol nodes in the sequence.
                 ASSERT(variable != NULL);
-                getVariableInfo(variable->getType(),
-                                variable->getOriginalSymbol(),
-                                variable->getSymbol(),
+                getVariableInfo(variable->getType(), variable->getSymbol(),
                                 infoList);
             }
         }

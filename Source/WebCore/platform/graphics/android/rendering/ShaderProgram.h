@@ -230,7 +230,7 @@ private:
 
     GLfloat m_tileProjMatrix[16];
 
-    WTF::Vector<ShaderResource> m_resources;
+    Vector<ShaderResource> m_resources;
 };
 
 } // namespace WebCore

@@ -134,11 +134,10 @@ void CSSImportRule::insertedIntoParent()
         root = curr;
     }
 
-    ResourceRequest request(parentSheet->document()->completeURL(absHref));
     if (parentSheet->isUserStyleSheet())
-        m_cachedSheet = cachedResourceLoader->requestUserCSSStyleSheet(request, parentSheet->charset());
+        m_cachedSheet = cachedResourceLoader->requestUserCSSStyleSheet(absHref, parentSheet->charset());
     else
-        m_cachedSheet = cachedResourceLoader->requestCSSStyleSheet(request, parentSheet->charset());
+        m_cachedSheet = cachedResourceLoader->requestCSSStyleSheet(absHref, parentSheet->charset());
     if (m_cachedSheet) {
         // if the import rule is issued dynamically, the sheet may be
         // removed from the pending sheet count, so let the doc know

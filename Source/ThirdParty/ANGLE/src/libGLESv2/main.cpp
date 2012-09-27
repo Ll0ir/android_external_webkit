@@ -7,7 +7,6 @@
 // main.cpp: DLL entry point and management of thread-local data.
 
 #include "libGLESv2/main.h"
-#include "libGLESv2/utilities.h"
 
 #include "common/debug.h"
 #include "libEGL/Surface.h"
@@ -94,25 +93,6 @@ Context *getContext()
     return current->context;
 }
 
-Context *getNonLostContext()
-{
-    Context *context = getContext();
-    
-    if (context)
-    {
-        if (context->isContextLost())
-        {
-            error(GL_OUT_OF_MEMORY);
-            return NULL;
-        }
-        else
-        {
-            return context;
-        }
-    }
-    return NULL;
-}
-
 egl::Display *getDisplay()
 {
     Current *current = (Current*)TlsGetValue(currentTLS);
@@ -125,19 +105,6 @@ IDirect3DDevice9 *getDevice()
     egl::Display *display = getDisplay();
 
     return display->getDevice();
-}
-
-bool checkDeviceLost(HRESULT errorCode)
-{
-    egl::Display *display = NULL;
-
-    if (isDeviceLostError(errorCode))
-    {
-        display = gl::getDisplay();
-        display->notifyDeviceLost();
-        return true;
-    }
-    return false;
 }
 }
 
@@ -152,23 +119,23 @@ void error(GLenum errorCode)
         {
           case GL_INVALID_ENUM:
             context->recordInvalidEnum();
-            TRACE("\t! Error generated: invalid enum\n");
+            gl::trace("\t! Error generated: invalid enum\n");
             break;
           case GL_INVALID_VALUE:
             context->recordInvalidValue();
-            TRACE("\t! Error generated: invalid value\n");
+            gl::trace("\t! Error generated: invalid value\n");
             break;
           case GL_INVALID_OPERATION:
             context->recordInvalidOperation();
-            TRACE("\t! Error generated: invalid operation\n");
+            gl::trace("\t! Error generated: invalid operation\n");
             break;
           case GL_OUT_OF_MEMORY:
             context->recordOutOfMemory();
-            TRACE("\t! Error generated: out of memory\n");
+            gl::trace("\t! Error generated: out of memory\n");
             break;
           case GL_INVALID_FRAMEBUFFER_OPERATION:
             context->recordInvalidFramebufferOperation();
-            TRACE("\t! Error generated: invalid framebuffer operation\n");
+            gl::trace("\t! Error generated: invalid framebuffer operation\n");
             break;
           default: UNREACHABLE();
         }

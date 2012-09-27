@@ -86,7 +86,7 @@ public:
 
 // network state
     void setSrc(const String&);
-    const KURL& currentSrc() const { return m_currentSrc; }
+    String currentSrc() const;
 
     enum NetworkState { NETWORK_EMPTY, NETWORK_IDLE, NETWORK_LOADING, NETWORK_NO_SOURCE };
     NetworkState networkState() const;
@@ -342,8 +342,8 @@ private:
     NetworkState m_networkState;
     ReadyState m_readyState;
     ReadyState m_readyStateMaximum;
-    KURL m_currentSrc;
-
+    String m_currentSrc;
+    
     RefPtr<MediaError> m_error;
 
     float m_volume;
