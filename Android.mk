@@ -80,13 +80,13 @@ LOCAL_C_INCLUDES := \
 	external/libxslt \
 	external/hyphenation \
 	external/skia/emoji \
-	external/skia/gpu/include \
 	external/skia/include/core \
 	external/skia/include/effects \
 	external/skia/include/gpu \
 	external/skia/include/images \
 	external/skia/include/ports \
 	external/skia/include/utils \
+	external/skia/src/gpu \
 	external/skia/src/ports \
 	external/sqlite/dist \
 	frameworks/base/core/jni/android/graphics \
@@ -270,6 +270,33 @@ ifeq ($(ENABLE_WTF_USE_ACCELERATED_COMPOSITING),true)
 LOCAL_CFLAGS += -DWTF_USE_ACCELERATED_COMPOSITING=1
 endif
 
+<<<<<<< HEAD
+ifeq ($(call is-chipset-prefix-in-board-platform,msm7627),true)
+  LOCAL_CFLAGS += -DVIDEO_PLATFORM_ID=2
+else
+  ifeq ($(call is-chipset-in-board-platform,msm7630),true)
+    LOCAL_CFLAGS += -DVIDEO_PLATFORM_ID=3
+  else
+    ifeq ($(call is-board-platform,msm8660),true)
+      LOCAL_CFLAGS += -DVIDEO_PLATFORM_ID=4
+    else
+      ifeq ($(call is-board-platform,msm8960),true)
+        LOCAL_CFLAGS += -DVIDEO_PLATFORM_ID=5
+      else
+        ifeq ($(call is-board-platform,copper),true)
+          LOCAL_CFLAGS += -DVIDEO_PLATFORM_ID=6
+        else
+          LOCAL_CFLAGS += -DVIDEO_PLATFORM_ID=1
+        endif
+      endif
+    endif
+  endif
+endif
+
+LOCAL_CFLAGS += -DENABLE_REQUEST_ANIMATION_FRAME=1
+
+=======
+>>>>>>> parent of 972a646... Implement requestAnimationFrame
 # LOCAL_LDLIBS is used in simulator builds only and simulator builds are only
 # valid on Linux
 LOCAL_LDLIBS += -lpthread -ldl

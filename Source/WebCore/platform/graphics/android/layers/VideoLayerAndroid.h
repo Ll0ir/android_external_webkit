@@ -1,5 +1,6 @@
 /*
  * Copyright 2011 The Android Open Source Project
+ * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -44,13 +45,21 @@ namespace WebCore {
 // Otherwise will draw a static image.
 // NOTE: These values are matching the ones in HTML5VideoView.java
 // Please keep them in sync when changed here.
-typedef enum {INITIALIZED, PREPARING, PREPARED, PLAYING, RELEASED} PlayerState;
+typedef enum {INITIALIZED, PREPARING, PREPARED, PLAYING, BUFFERING, RELEASED} PlayerState;
+
+class VideoLayerObserverInterface : public SkRefCnt {
+public:
+    virtual ~VideoLayerObserverInterface() { }
+    virtual void notifyRectChange(const FloatRect&) = 0;
+};
 
 class VideoLayerAndroid : public LayerAndroid {
 
 public:
     VideoLayerAndroid();
     explicit VideoLayerAndroid(const VideoLayerAndroid& layer);
+
+    virtual ~VideoLayerAndroid();
 
     virtual bool isVideo() const { return true; }
     virtual LayerAndroid* copy() const { return new VideoLayerAndroid(*this); }
@@ -59,11 +68,11 @@ public:
     virtual bool drawGL(bool layerTilesDisabled);
     void setSurfaceTexture(sp<SurfaceTexture> texture, int textureName, PlayerState playerState);
     virtual bool needsIsolatedSurface() { return true; }
-
+    void setPlayerState(PlayerState state);
+    void registerVideoLayerObserver(VideoLayerObserverInterface* observer);
 private:
     void init();
-    void showPreparingAnimation(const SkRect& rect,
-                                const SkRect innerRect);
+    void showProgressSpinner(const SkRect& innerRect);
     SkRect calVideoRect(const SkRect& rect);
     // Surface texture for showing the video is actually allocated in Java side
     // and passed into this native code.
@@ -74,6 +83,8 @@ private:
     static double m_rotateDegree;
 
     static const int ROTATESTEP = 12;
+
+    VideoLayerObserverInterface* m_observer;
 };
 
 } // namespace WebCore
