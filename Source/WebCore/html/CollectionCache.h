@@ -28,7 +28,6 @@
 namespace WebCore {
 
 class Element;
-class Node;
 
 struct CollectionCache {
     WTF_MAKE_FAST_ALLOCATED;
@@ -59,7 +58,6 @@ public:
     NodeCacheMap nameCache;
     bool hasLength;
     bool hasNameCache;
-    Node* lastDecendantOfBase;
 
 private:
     static void copyCacheMap(NodeCacheMap&, const NodeCacheMap&);

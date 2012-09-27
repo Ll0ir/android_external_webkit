@@ -42,7 +42,6 @@ inline HTMLDataGridColElement::HTMLDataGridColElement(const QualifiedName& name,
     : HTMLElement(name, document)
     , m_dataGrid(0)
 {
-    setIeForbidsInsertHTML();
 }
 
 PassRefPtr<HTMLDataGridColElement> HTMLDataGridColElement::create(const QualifiedName& name, Document* document)

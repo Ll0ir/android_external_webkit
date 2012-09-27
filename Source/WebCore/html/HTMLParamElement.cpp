@@ -35,7 +35,6 @@ inline HTMLParamElement::HTMLParamElement(const QualifiedName& tagName, Document
     : HTMLElement(tagName, document)
 {
     ASSERT(hasTagName(paramTag));
-    setIeForbidsInsertHTML();
 }
 
 PassRefPtr<HTMLParamElement> HTMLParamElement::create(const QualifiedName& tagName, Document* document)

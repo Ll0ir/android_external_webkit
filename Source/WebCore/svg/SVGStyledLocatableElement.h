@@ -42,7 +42,7 @@ public:
     virtual AffineTransform localCoordinateSpaceTransform(SVGLocatable::CTMScope mode) const { return SVGLocatable::localCoordinateSpaceTransform(mode); }
 
 protected:
-    SVGStyledLocatableElement(const QualifiedName&, Document*, ConstructionType = CreateSVGElement);
+    SVGStyledLocatableElement(const QualifiedName&, Document*);
 
 private:
     virtual bool isStyledLocatable() const { return true; }

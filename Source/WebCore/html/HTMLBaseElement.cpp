@@ -35,7 +35,6 @@ inline HTMLBaseElement::HTMLBaseElement(const QualifiedName& tagName, Document* 
     : HTMLElement(tagName, document)
 {
     ASSERT(hasTagName(baseTag));
-    setIeForbidsInsertHTML();
 }
 
 PassRefPtr<HTMLBaseElement> HTMLBaseElement::create(const QualifiedName& tagName, Document* document)

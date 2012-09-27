@@ -32,8 +32,8 @@ namespace WebCore {
 
 // SVGShadowTreeContainerElement
 
-SVGShadowTreeContainerElement::SVGShadowTreeContainerElement(Document* document, ConstructionType constructionType)
-    : SVGGElement(SVGNames::gTag, document, constructionType)
+SVGShadowTreeContainerElement::SVGShadowTreeContainerElement(Document* document)
+    : SVGGElement(SVGNames::gTag, document)
 {
 }
 
@@ -54,7 +54,7 @@ PassRefPtr<Element> SVGShadowTreeContainerElement::cloneElementWithoutAttributes
 // SVGShadowTreeRootElement
 
 inline SVGShadowTreeRootElement::SVGShadowTreeRootElement(Document* document, SVGUseElement* host)
-    : SVGShadowTreeContainerElement(document, CreateSVGShadowRoot)
+    : SVGShadowTreeContainerElement(document)
 {
     setParent(host);
     setInDocument();

@@ -28,12 +28,6 @@
 #include <wtf/RefCounted.h>
 #include <wtf/Forward.h>
 #include <wtf/RefPtr.h>
-#include <wtf/Vector.h>
-
-namespace WTF {
-    // Properties in Vector can be initialized with memset and moved using memcpy.
-    template<> struct VectorTraits<WebCore::Node*> : SimpleClassVectorTraits { };
-}
 
 namespace WebCore {
 
@@ -48,11 +42,9 @@ namespace WebCore {
 
             unsigned cachedLength;
             Node* lastItem;
-            Node* lastDecendantOfRoot;
             unsigned lastItemOffset;
             bool isLengthCacheValid : 1;
             bool isItemCacheValid : 1;
-            Vector<Node* > cachedNodes;
         protected:
             Caches();
         };

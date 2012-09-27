@@ -58,7 +58,7 @@ public:
     operator const String&() const { return m_string; }
     const String& string() const { return m_string; };
 
-    ALWAYS_INLINE AtomicStringImpl* impl() const { return static_cast<AtomicStringImpl *>(m_string.impl()); }
+    AtomicStringImpl* impl() const { return static_cast<AtomicStringImpl *>(m_string.impl()); }
     
     const UChar* characters() const { return m_string.characters(); }
     unsigned length() const { return m_string.length(); }

@@ -45,7 +45,6 @@ inline HTMLAreaElement::HTMLAreaElement(const QualifiedName& tagName, Document* 
     , m_shape(Unknown)
 {
     ASSERT(hasTagName(areaTag));
-    setIeForbidsInsertHTML();
 }
 
 PassRefPtr<HTMLAreaElement> HTMLAreaElement::create(const QualifiedName& tagName, Document* document)

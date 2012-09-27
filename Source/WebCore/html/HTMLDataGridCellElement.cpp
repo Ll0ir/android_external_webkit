@@ -38,7 +38,6 @@ using namespace HTMLNames;
 inline HTMLDataGridCellElement::HTMLDataGridCellElement(const QualifiedName& name, Document* document)
     : HTMLElement(name, document)
 {
-    setIeForbidsInsertHTML();
 }
 
 PassRefPtr<HTMLDataGridCellElement> HTMLDataGridCellElement::create(const QualifiedName& name, Document* document)

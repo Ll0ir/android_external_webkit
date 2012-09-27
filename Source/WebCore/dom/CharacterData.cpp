@@ -189,7 +189,6 @@ void CharacterData::updateRenderer(unsigned offsetOfReplacedData, unsigned lengt
 
 void CharacterData::dispatchModifiedEvent(StringImpl* oldData)
 {
-    updatePrevNextNodesInSubtree();
     if (parentNode())
         parentNode()->childrenChanged();
     if (document()->hasListenerType(Document::DOMCHARACTERDATAMODIFIED_LISTENER))

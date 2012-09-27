@@ -71,8 +71,8 @@ public:
 
     ALWAYS_INLINE void deref()
     {
-        --m_refCount;
-        if (!m_refCount)
+        m_refCountAndFlags -= s_refCountIncrement;
+        if (!(m_refCountAndFlags & s_refCountMask))
             destructNonRecursive();
     }
 
@@ -86,7 +86,7 @@ private:
     void destructNonRecursive();
     void derefFibersNonRecursive(Vector<RopeImpl*, 32>& workQueue);
 
-    bool hasOneRef() { return m_refCount == 1; }
+    bool hasOneRef() { return (m_refCountAndFlags & s_refCountMask) == s_refCountIncrement; }
 
     unsigned m_size;
     Fiber m_fibers[1];

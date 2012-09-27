@@ -44,7 +44,6 @@ inline HTMLMetaElement::HTMLMetaElement(const QualifiedName& tagName, Document* 
     : HTMLElement(tagName, document)
 {
     ASSERT(hasTagName(metaTag));
-    setIeForbidsInsertHTML();
 }
 
 PassRefPtr<HTMLMetaElement> HTMLMetaElement::create(const QualifiedName& tagName, Document* document)

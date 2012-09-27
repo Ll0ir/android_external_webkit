@@ -3,7 +3,6 @@
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
  * Copyright (C) 2004, 2006, 2007, 2008, 2010 Apple Inc. All rights reserved.
- * Copyright (C) 2012 Code Aurora Forum. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -57,18 +56,8 @@ unsigned DynamicNodeList::length() const
 
     unsigned length = 0;
 
-    Node* lastNode = m_rootNode->lastDescendantNode();
-    Vector<Node* >& cachedNodes = m_caches->cachedNodes;
-    for (Node* n = m_rootNode->firstChild(); n; n = n->traverseNextNodeFastPath()) {
-        if (n->isElementNode() && nodeMatches(static_cast<Element*>(n))) {
-            if (length >= cachedNodes.size())
-                cachedNodes.resize(length + 1);
-            cachedNodes.data()[length] = n;
-            length ++;
-        }
-        if (n == lastNode)
-            break;
-    }
+    for (Node* n = m_rootNode->firstChild(); n; n = n->traverseNextNode(m_rootNode.get()))
+        length += n->isElementNode() && nodeMatches(static_cast<Element*>(n));
 
     m_caches->cachedLength = length;
     m_caches->isLengthCacheValid = true;
@@ -79,9 +68,7 @@ unsigned DynamicNodeList::length() const
 Node* DynamicNodeList::itemForwardsFromCurrent(Node* start, unsigned offset, int remainingOffset) const
 {
     ASSERT(remainingOffset >= 0);
-    if (!m_caches->lastDecendantOfRoot)
-        m_caches->lastDecendantOfRoot = m_rootNode->lastDescendantNode();
-    for (Node* n = start; n; n = n->traverseNextNodeFastPath()) {
+    for (Node* n = start; n; n = n->traverseNextNode(m_rootNode.get())) {
         if (n->isElementNode() && nodeMatches(static_cast<Element*>(n))) {
             if (!remainingOffset) {
                 m_caches->lastItem = n;
@@ -91,8 +78,6 @@ Node* DynamicNodeList::itemForwardsFromCurrent(Node* start, unsigned offset, int
             }
             --remainingOffset;
         }
-        if (n == m_caches->lastDecendantOfRoot)
-            break;
     }
 
     return 0; // no matching node in this subtree
@@ -118,14 +103,6 @@ Node* DynamicNodeList::itemBackwardsFromCurrent(Node* start, unsigned offset, in
 
 Node* DynamicNodeList::item(unsigned offset) const
 {
-    Node* result;
-    Vector<Node* >& cachedNodes = m_caches->cachedNodes;
-    if (offset < cachedNodes.size()) {
-        result = cachedNodes[offset];
-        if (result)
-            return result;
-    }
-
     int remainingOffset = offset;
     Node* start = m_rootNode->firstChild();
     if (m_caches->isItemCacheValid) {
@@ -138,16 +115,8 @@ Node* DynamicNodeList::item(unsigned offset) const
     }
 
     if (remainingOffset < 0)
-        result = itemBackwardsFromCurrent(start, offset, remainingOffset);
-    else
-        result = itemForwardsFromCurrent(start, offset, remainingOffset);
-
-    if (result) {
-        if (offset >= cachedNodes.size())
-            cachedNodes.resize(offset + 1);
-        cachedNodes.data()[offset] = result;
-    }
-    return result;
+        return itemBackwardsFromCurrent(start, offset, remainingOffset);
+    return itemForwardsFromCurrent(start, offset, remainingOffset);
 }
 
 Node* DynamicNodeList::itemWithName(const AtomicString& elementId) const
@@ -190,7 +159,6 @@ void DynamicNodeList::invalidateCache()
 
 DynamicNodeList::Caches::Caches()
     : lastItem(0)
-    , lastDecendantOfRoot(0)
     , isLengthCacheValid(false)
     , isItemCacheValid(false)
 {
@@ -204,10 +172,8 @@ PassRefPtr<DynamicNodeList::Caches> DynamicNodeList::Caches::create()
 void DynamicNodeList::Caches::reset()
 {
     lastItem = 0;
-    lastDecendantOfRoot = 0;
     isLengthCacheValid = false;
-    isItemCacheValid = false;
-    cachedNodes.clear();
+    isItemCacheValid = false;     
 }
 
 } // namespace WebCore

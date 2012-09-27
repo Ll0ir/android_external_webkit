@@ -69,8 +69,6 @@ void Attr::createTextChild()
         textNode->setParent(this);
         setFirstChild(textNode.get());
         setLastChild(textNode.get());
-        textNode->updateNextNode();
-        textNode->updatePreviousNode();
     }
 }
 

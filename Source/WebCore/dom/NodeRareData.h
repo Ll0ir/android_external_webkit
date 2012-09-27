@@ -22,7 +22,6 @@
 #ifndef NodeRareData_h
 #define NodeRareData_h
 
-#include "ChildNodeList.h"
 #include "ClassNodeList.h"
 #include "DynamicNodeList.h"
 #include "NameNodeList.h"
@@ -43,19 +42,16 @@ public:
     typedef HashSet<DynamicNodeList*> NodeListSet;
     NodeListSet m_listsWithCaches;
     
-    RefPtr<ChildNodeList> m_childNodeListCache;
+    RefPtr<DynamicNodeList::Caches> m_childNodeListCaches;
     
     typedef HashMap<String, ClassNodeList*> ClassNodeListCache;
     ClassNodeListCache m_classNodeListCache;
 
     typedef HashMap<String, NameNodeList*> NameNodeListCache;
     NameNodeListCache m_nameNodeListCache;
-
-    typedef HashMap<AtomicStringImpl*, TagNodeList*> TagNodeListCache;
+    
+    typedef HashMap<RefPtr<QualifiedName::QualifiedNameImpl>, TagNodeList*> TagNodeListCache;
     TagNodeListCache m_tagNodeListCache;
-
-    typedef HashMap<RefPtr<QualifiedName::QualifiedNameImpl>, TagNodeListNS*> TagNodeListCacheNS;
-    TagNodeListCacheNS m_tagNodeListCacheNS;
 
     RefPtr<DynamicNodeList> m_labelsNodeListCache;
     
@@ -70,8 +66,7 @@ public:
 
 private:
     NodeListsNodeData()
-        : m_childNodeListCache(0)
-        , m_labelsNodeListCache(0)
+        : m_childNodeListCaches(DynamicNodeList::Caches::create()), m_labelsNodeListCache(0)
     {
     }
 };
@@ -111,15 +106,6 @@ public:
     void clearNodeLists() { m_nodeLists.clear(); }
     void setNodeLists(PassOwnPtr<NodeListsNodeData> lists) { m_nodeLists = lists; }
     NodeListsNodeData* nodeLists() const { return m_nodeLists.get(); }
-    NodeListsNodeData* ensureNodeLists(Node* n)
-    {
-        if (!m_nodeLists) {
-            m_nodeLists = NodeListsNodeData::create();
-            if (n->document())
-                n->document()->addNodeListCache();
-        }
-        return m_nodeLists.get();
-    }
 
     short tabIndex() const { return m_tabIndex; }
     void setTabIndexExplicitly(short index) { m_tabIndex = index; m_tabIndexWasSetExplicitly = true; }

@@ -1828,7 +1828,7 @@ void Document::removeAllEventListeners()
 
     if (DOMWindow* domWindow = this->domWindow())
         domWindow->removeAllEventListeners();
-    for (Node* node = firstChild(); node; node = node->traverseNextNodeFastPath())
+    for (Node* node = firstChild(); node; node = node->traverseNextNode())
         node->removeAllEventListeners();
 }
 
@@ -3871,12 +3871,11 @@ static inline bool isValidNameASCII(const UChar* characters, unsigned length)
 
 bool Document::isValidName(const String& name)
 {
-    if (name.isEmpty())
+    unsigned length = name.length();
+    if (!length)
         return false;
 
-    StringImpl* impl = name.impl();
-    const UChar* characters = impl->characters();
-    unsigned length = impl->length();
+    const UChar* characters = name.characters();
     return isValidNameASCII(characters, length) || isValidNameNonASCII(characters, length);
 }
 

@@ -55,7 +55,7 @@ public:
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
 
 protected:
-    SVGStyledTransformableElement(const QualifiedName&, Document*, ConstructionType = CreateSVGElement);
+    SVGStyledTransformableElement(const QualifiedName&, Document*);
 
     virtual void parseMappedAttribute(Attribute*);
     virtual void svgAttributeChanged(const QualifiedName&);

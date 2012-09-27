@@ -41,7 +41,6 @@ inline HTMLFrameElement::HTMLFrameElement(const QualifiedName& tagName, Document
     , m_noResize(false)
 {
     ASSERT(hasTagName(frameTag));
-    setIeForbidsInsertHTML();
 }
 
 PassRefPtr<HTMLFrameElement> HTMLFrameElement::create(const QualifiedName& tagName, Document* document)
